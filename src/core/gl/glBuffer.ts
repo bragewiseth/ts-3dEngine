@@ -15,7 +15,6 @@ export class GLBuffer
     private _elementSize : number;
     private _stride : number;
     private _buffer : WebGLBuffer;
-
     private _targetBufferType : number;
     private _dataType : number;
     private _mode : number;

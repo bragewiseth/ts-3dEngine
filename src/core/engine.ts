@@ -1,31 +1,49 @@
 import { GLUtils } from "./gl/GL";
 import { gl } from "./gl/GL";
 import { Shader } from "./gl/shader";
-import { AttributeInfo, GLBuffer } from "./gl/glBuffer";
+import { Sprite } from "./graphics/sprite";
+import { Matrix4x4 } from "./math/matrix4x4";
 
 
 export class Engine 
 {
     private _canvas : HTMLCanvasElement;
     private _shader : Shader;
-    private _buffer : GLBuffer;
+    private _sprite : Sprite;
+    private _projectionMatrix : Matrix4x4;
 
     constructor() { console.log('Engine constructed') }
-    
+
+
+
     public start()
     {
         console.log('Engine started')
         this._canvas = GLUtils.init();
-        this._canvas.width = window.innerWidth;
-        this._canvas.height = window.innerHeight;
         gl.clearColor(0.1, 0.1, 0.1, 1.0);
         this.loadShaders();
         this._shader.use();
-        this.createBuffer();
-        gl.viewport(0, 0, this._canvas.width, this._canvas.height);
+        // load
+        this._projectionMatrix = Matrix4x4.orthographic(0, this._canvas.width, 0, this._canvas.height, -100, 100);
+        this._sprite = new Sprite('test');
+        this._sprite.load();
+        // this._sprite.position.setX( 200 );
+        // this._sprite.position.setY( this._canvas.height / 2 );
+
+        this.resize();
         this.loop();
     }
 
+
+    public resize() : void
+    {
+        if ( this._canvas !== undefined )
+        {
+            this._canvas.width = window.innerWidth;
+            this._canvas.height = window.innerHeight;
+            gl.viewport( -1, 1, -1, 1 );
+        }
+    }
 
     private loop()
     {
@@ -33,30 +51,16 @@ export class Engine
         // set uniforms
         let colorLocation = this._shader.getUniformLocation( 'u_color' );
         gl.uniform4f( colorLocation , 1, 0.5, 0 ,1 );
-
-        this._buffer.bind();
-        this._buffer.draw();
+        let matrixLocation = this._shader.getUniformLocation( 'uMVMatrix' );
+        gl.uniformMatrix4fv( matrixLocation, false, new Float32Array( this._projectionMatrix.getData() ));
+        let modelLocation = this._shader.getUniformLocation( 'uModel' );
+        gl.uniformMatrix4fv( modelLocation, false, new Float32Array( Matrix4x4.translation(this._sprite.position).getData() ));
+        this._sprite.draw();
         requestAnimationFrame( this.loop.bind(this) ) 
     }
 
 
-    private createBuffer() : void
-    {
-        this._buffer = new GLBuffer(3);
-        let positionAttribute = new AttributeInfo();
-        positionAttribute.location = this._shader.getAttributeLocation( "aVertexPosition" );
-        positionAttribute.offset = 0;
-        positionAttribute.size = 3;
-        this._buffer.addAttributeLocation( positionAttribute );
-        let vertices : number[] =
-            [ 0, 0, 0,
-              0, 0.5, 0,
-              0.5, 0.5, 0]
 
-        this._buffer.pushBackData( vertices );
-        this._buffer.upload()
-        this._buffer.unbind();
-    }
 
 
 
@@ -65,9 +69,11 @@ export class Engine
         let vertexShaderSource : string = 
         `
         attribute vec3 aVertexPosition;
+        uniform mat4 uMVMatrix;
+        uniform mat4 uModel;
         void main()
         {
-            gl_Position = vec4(aVertexPosition, 1.0);
+            gl_Position = uMVMatrix * uModel * vec4(aVertexPosition, 1.0);
         }
         `;
 
