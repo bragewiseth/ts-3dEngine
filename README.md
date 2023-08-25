@@ -1,1 +1,1 @@
-# ts-3dEngine
+# 3D engine using WebGL written in TypeScript
