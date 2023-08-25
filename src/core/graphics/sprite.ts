@@ -19,6 +19,8 @@ export class Sprite
     }
 
 
+
+
     public load() : void
     {
         this._buffer = new GLBuffer(3);
@@ -31,7 +33,7 @@ export class Sprite
             [ 0, 0, 0,
               0, this._height, 0,
               this._width, this._height, 0,
-            
+
               this._width, this._height, 0,
               this._width, 0, 0,
               0, 0, 0

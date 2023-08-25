@@ -14,7 +14,10 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "strictPropertyInitialization": false
+    "strictPropertyInitialization": false,
+    "types": [
+      "vite-plugin-glsl/ext"
+    ]
   },
   "include": ["src"]
 }

@@ -54,6 +54,7 @@ export class GLBuffer
     }
 
 
+
     public destroy() : void
     {
         gl.deleteBuffer(this._buffer);

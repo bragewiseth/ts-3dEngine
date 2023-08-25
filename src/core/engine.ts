@@ -3,6 +3,9 @@ import { gl } from "./gl/GL";
 import { Shader } from "./gl/shader";
 import { Sprite } from "./graphics/sprite";
 import { Matrix4x4 } from "./math/matrix4x4";
+import vertex  from './glsl/vertexShader.vert';
+import fragment from './glsl/fragmentShader.frag';
+
 
 
 export class Engine 
@@ -13,6 +16,8 @@ export class Engine
     private _projectionMatrix : Matrix4x4;
 
     constructor() { console.log('Engine constructed') }
+
+
 
 
 
@@ -66,27 +71,6 @@ export class Engine
 
     private loadShaders () : void
     {
-        let vertexShaderSource : string = 
-        `
-        attribute vec3 aVertexPosition;
-        uniform mat4 uMVMatrix;
-        uniform mat4 uModel;
-        void main()
-        {
-            gl_Position = uMVMatrix * uModel * vec4(aVertexPosition, 1.0);
-        }
-        `;
-
-        let fragmentShaderSource : string =
-        `
-        precision mediump float;
-        uniform vec4 u_color;
-        void main()
-        {
-            gl_FragColor = u_color;
-        }
-        `;
-
-        this._shader = new Shader('basic', vertexShaderSource, fragmentShaderSource);
+        this._shader = new Shader('basic', vertex, fragment);
     }
 }

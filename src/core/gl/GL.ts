@@ -29,7 +29,7 @@ export class GLUtils
             document.body.appendChild(canvas);
         }
 
-        gl = canvas.getContext('webgl') as WebGLRenderingContext;
+        gl = canvas.getContext('webgl2') as WebGLRenderingContext;
         if ( gl === undefined )
         {
             throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.');

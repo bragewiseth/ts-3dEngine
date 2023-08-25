@@ -61,6 +61,9 @@ export class Shader
         gl.compileShader(shader);
         if ( !gl.getShaderParameter(shader, gl.COMPILE_STATUS) )
         {
+            const errorLog = gl.getShaderInfoLog(shader);
+            console.error("An error occurred compiling the shaders:", errorLog);
+            console.error("Shader source:", source); // Add this line to log the shader 
             throw new Error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
         }
         return shader;
