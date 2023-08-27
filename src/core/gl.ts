@@ -1,4 +1,4 @@
-export var gl : WebGLRenderingContext;
+export var gl : WebGLRenderingContext; 
 /** 
  * This class is a utility class for WebGL.
 */
@@ -29,7 +29,7 @@ export class GLUtils
             document.body.appendChild(canvas);
         }
 
-        gl = canvas.getContext('webgl2') as WebGLRenderingContext;
+        gl = canvas.getContext('webgl') as WebGLRenderingContext;
         if ( gl === undefined )
         {
             throw new Error('Unable to initialize WebGL. Your browser or machine may not support it.');

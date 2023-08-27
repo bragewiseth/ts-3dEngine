@@ -1,76 +1,111 @@
-import { GLUtils } from "./gl/GL";
-import { gl } from "./gl/GL";
-import { Shader } from "./gl/shader";
-import { Sprite } from "./graphics/sprite";
-import { Matrix4x4 } from "./math/matrix4x4";
+import { GLUtils } from "./gl";
+import { gl } from "./gl";
+import { Shader } from "./shader";
 import vertex  from './glsl/vertexShader.vert';
 import fragment from './glsl/fragmentShader.frag';
+import { drawScene } from "./drawscene";
+import { initBuffers } from "./buffers";
+import { positions, faceColors, indices, textureCoordinates, vertexNormals } from "./instance";
+
+let deltaTime = 0;
+let cubeRotation = 0.0;
 
 
-
-export class Engine 
+function engine()
 {
-    private _canvas : HTMLCanvasElement;
-    private _shader : Shader;
-    private _sprite : Sprite;
-    private _projectionMatrix : Matrix4x4;
-
-    constructor() { console.log('Engine constructed') }
-
-
-
-
-
-    public start()
+    let canvas = GLUtils.init();
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    let shader = new Shader('basic', vertex, fragment);
+    const buffers = initBuffers(gl, positions, faceColors, indices, textureCoordinates, vertexNormals );
+    const texture : WebGLTexture = loadTexture(gl, 'assets/copper.webp') as WebGLTexture;
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    requestAnimationFrame(render);
+    let then = 0;
+    function render(now: number)
     {
-        console.log('Engine started')
-        this._canvas = GLUtils.init();
-        gl.clearColor(0.1, 0.1, 0.1, 1.0);
-        this.loadShaders();
-        this._shader.use();
-        // load
-        this._projectionMatrix = Matrix4x4.orthographic(0, this._canvas.width, 0, this._canvas.height, -100, 100);
-        this._sprite = new Sprite('test');
-        this._sprite.load();
-        // this._sprite.position.setX( 200 );
-        // this._sprite.position.setY( this._canvas.height / 2 );
-
-        this.resize();
-        this.loop();
+        now *= 0.001; // convert to seconds
+        deltaTime = now - then;
+        then = now;
+        drawScene(gl, shader, buffers,texture, canvas, cubeRotation);
+        cubeRotation += deltaTime;
+        requestAnimationFrame(render);
     }
-
-
-    public resize() : void
-    {
-        if ( this._canvas !== undefined )
-        {
-            this._canvas.width = window.innerWidth;
-            this._canvas.height = window.innerHeight;
-            gl.viewport( -1, 1, -1, 1 );
-        }
-    }
-
-    private loop()
-    {
-        gl.clear( gl.COLOR_BUFFER_BIT );
-        // set uniforms
-        let colorLocation = this._shader.getUniformLocation( 'u_color' );
-        gl.uniform4f( colorLocation , 1, 0.5, 0 ,1 );
-        let matrixLocation = this._shader.getUniformLocation( 'uMVMatrix' );
-        gl.uniformMatrix4fv( matrixLocation, false, new Float32Array( this._projectionMatrix.getData() ));
-        let modelLocation = this._shader.getUniformLocation( 'uModel' );
-        gl.uniformMatrix4fv( modelLocation, false, new Float32Array( Matrix4x4.translation(this._sprite.position).getData() ));
-        this._sprite.draw();
-        requestAnimationFrame( this.loop.bind(this) ) 
-    }
-
-
-
-
-
-
-    private loadShaders () : void
-    {
-        this._shader = new Shader('basic', vertex, fragment);
-    }
+    requestAnimationFrame(render);
 }
+
+
+
+
+//
+// Initialize a texture and load an image.
+// When the image finished loading copy it into the texture.
+//
+function loadTexture(gl : WebGLRenderingContext, url : string) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Because images have to be downloaded over the internet
+    // they might take a moment until they are ready.
+    // Until then put a single pixel in the texture so we can
+    // use it immediately. When the image has finished downloading
+    // we'll update the texture with the contents of the image.
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = 1;
+    const height = 1;
+    const border = 0;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+    gl.texImage2D(
+        gl.TEXTURE_2D,
+        level,
+        internalFormat,
+        width,
+        height,
+        border,
+        srcFormat,
+        srcType,
+        pixel,
+    );
+
+    const image = new Image();
+    image.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            level,
+            internalFormat,
+            srcFormat,
+            srcType,
+            image,
+        );
+
+        // WebGL1 has different requirements for power of 2 images
+        // vs. non power of 2 images so check if the image is a
+        // power of 2 in both dimensions.
+        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+            // Yes, it's a power of 2. Generate mips.
+            gl.generateMipmap(gl.TEXTURE_2D);
+        } else {
+            // No, it's not a power of 2. Turn off mips and set
+            // wrapping to clamp to edge
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        }
+    };
+    image.src = url;
+
+    return texture;
+}
+
+function isPowerOf2(value : number) 
+{
+    return (value & (value - 1)) === 0;
+}
+
+
+
+export { engine };
