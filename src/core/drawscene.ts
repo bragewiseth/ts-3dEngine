@@ -32,7 +32,7 @@ function drawScene(gl: WebGLRenderingContext, shader : Shader , buffers : Buffer
     gl.depthFunc(gl.LEQUAL); // Near things obscure far things
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const fieldOfView = (45 * Math.PI) / 180; // in radians
+    const fieldOfView = (45 * Math.PI) / 2000; // in radians
     const aspect = gl.canvas.width / gl.canvas.height;
     const zNear = 0.1;
     const zFar = 100.0;
@@ -43,7 +43,7 @@ function drawScene(gl: WebGLRenderingContext, shader : Shader , buffers : Buffer
     mat4.translate(
         modelViewMatrix, // destination matrix
         modelViewMatrix, // matrix to translate
-        [-0.0, 0.0, -6.0],
+        [-0.0, 0.0, -80.0],
     ); // amount to translate
     mat4.rotate(
         modelViewMatrix, // destination matrix
@@ -63,6 +63,8 @@ function drawScene(gl: WebGLRenderingContext, shader : Shader , buffers : Buffer
         cubeRotation * 0.3, // amount to rotate in radians
         [1, 0, 0],
     ); // axis to rotate around (X)
+
+
     const normalMatrix = mat4.create();
     mat4.invert(normalMatrix, modelViewMatrix);
     mat4.transpose(normalMatrix, normalMatrix);
